@@ -11,8 +11,12 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    // TODO: initiate controllers
   }
+
+//! Variablen hierhin packen damit diese nicht immer neu gebildet werden
+  TextEditingController postleitzahl = TextEditingController();
+//! wichtig das Fragezeichen steht für nullable
+  Future<String>? getInputPlz;
 
   @override
   Widget build(BuildContext context) {
@@ -20,40 +24,64 @@ class _MainScreenState extends State<MainScreen> {
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Center(
-          child: Column(
-            children: [
-              const TextField(
-                decoration: InputDecoration(
-                    border: OutlineInputBorder(), labelText: "Postleitzahl"),
-              ),
-              const SizedBox(height: 32),
-              OutlinedButton(
-                onPressed: () {
-                  // TODO: implementiere Suche
-                },
-                child: const Text("Suche"),
-              ),
-              const SizedBox(height: 32),
-              Text("Ergebnis: Noch keine PLZ gesucht",
-                  style: Theme.of(context).textTheme.labelLarge),
-            ],
+          child: SafeArea(
+            child: Column(
+              children: [
+                TextFormField(
+                  //! Hier wird der Controller festgesetzt um Inhalte aus dem Textformfiled zu entnehmen
+                  controller: postleitzahl,
+                  decoration: const InputDecoration(
+                      border: OutlineInputBorder(), labelText: "Postleitzahl"),
+                ),
+                const SizedBox(height: 32),
+                //! Der Future Buileder darf nicht direkt in die Onpressed Funktion
+                FutureBuilder(
+                  future: getInputPlz,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    } else if (snapshot.hasData) {
+                      return Text("Die gefundene Stadt ist:${snapshot.data}",
+                          style: Theme.of(context).textTheme.labelLarge);
+                    } else if (snapshot.hasError) {
+                      return Text("${snapshot.error}",
+                          style: Theme.of(context).textTheme.labelLarge);
+                    }
+                    return const Text("null");
+                  },
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                OutlinedButton(
+                  onPressed: () {
+                    //! Hier wird das Future getinput mit Daten gefühlt. Diese werden direkt aus dem Textfield an dei Methode übergeben und diese returned dann denn wert
+                    setState(() {
+                      getInputPlz = getCityFromZip(postleitzahl.text);
+                    });
+                  },
+                  child: const Text("Suche"),
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  @override
-  void dispose() {
-    // TODO: dispose controllers
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   postleitzahl;
+  //   super.dispose();
+  // }
 
-  Future<String> getCityFromZip(String zip) async {
+  Future<String> getCityFromZip(String plz) async {
     // simuliere Dauer der Datenbank-Anfrage
     await Future.delayed(const Duration(seconds: 3));
 
-    switch (zip) {
+    switch (plz) {
       case "10115":
         return 'Berlin';
       case "20095":
