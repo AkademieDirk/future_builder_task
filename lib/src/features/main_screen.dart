@@ -71,11 +71,11 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  // @override
-  // void dispose() {
-  //   postleitzahl;
-  //   super.dispose();
-  // }
+  @override
+  void dispose() {
+    postleitzahl.dispose();
+    super.dispose();
+  }
 
   Future<String> getCityFromZip(String plz) async {
     // simuliere Dauer der Datenbank-Anfrage
